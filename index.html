@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Relatório de Tarefas - Equipamentos</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  label, select, input { margin: 5px 0; display: block; }
+  .status-parado { color: white; background-color: red; padding: 2px 8px; border-radius: 3px; }
+  .status-liberado { color: white; background-color: green; padding: 2px 8px; border-radius: 3px; }
+  .status-standby { color: black; background-color: yellow; padding: 2px 8px; border-radius: 3px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  th, td { text-align: left; border: 1px solid #ccc; padding: 8px; }
+</style>
+</head>
+<body>
+
+<h2>Cadastro de Equipamentos</h2>
+<form id="equipamentoForm">
+  <label for="nomeEquip">Nome do Equipamento:</label>
+  <input type="text" id="nomeEquip" required />
+  
+  <label for="statusEquip">Status:</label>
+  <select id="statusEquip" required>
+    <option value="" disabled selected>Selecione o status</option>
+    <option value="parado">Parado</option>
+    <option value="liberado">Liberado</option>
+    <option value="standby">Standby</option>
+  </select>
+  
+  <button type="submit">Cadastrar</button>
+</form>
+
+<h2>Relatório de Equipamentos</h2>
+<table id="relatorioEquip">
+  <thead>
+    <tr>
+      <th>Equipamento</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Equipamentos cadastrados aparecem aqui -->
+  </tbody>
+</table>
+
+<script>
+  const form = document.getElementById('equipamentoForm');
+  const tabelaCorpo = document.querySelector('#relatorioEquip tbody');
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const nome = document.getElementById('nomeEquip').value.trim();
+    const status = document.getElementById('statusEquip').value;
+
+    if (nome && status) {
+      const tr = document.createElement('tr');
+      const tdNome = document.createElement('td');
+      tdNome.textContent = nome;
+      const tdStatus = document.createElement('td');
+      
+      tdStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+      tdStatus.className = `status-${status}`;
+      
+      tr.appendChild(tdNome);
+      tr.appendChild(tdStatus);
+      tabelaCorpo.appendChild(tr);
+
+      form.reset();
+    }
+  });
+</script>
+
+</body>
+</html>
