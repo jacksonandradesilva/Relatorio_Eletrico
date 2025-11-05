@@ -2,23 +2,14 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<title>Relatório de Tarefas - Equipamentos</title>
-<link rel="stylesheet" href="stiles.css" />
-<style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
-  label, select, input { margin: 5px 0; display: block; }
-  .status-parado { color: white; background-color: red; padding: 2px 8px; border-radius: 3px; }
-  .status-liberado { color: white; background-color: green; padding: 2px 8px; border-radius: 3px; }
-  .status-standby { color: black; background-color: yellow; padding: 2px 8px; border-radius: 3px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  th, td { text-align: left; border: 1px solid #ccc; padding: 8px; }
-</style>
+<title>MINA - MANUTENÇÃO</title>
+<link rel="stylesheet" href="stile.css" />
 </head>
 <body>
 
-<h2>Cadastro de Equipamentos</h2>
+<h2>STATUS - MINA MANUTENÇÃO</h2>
 <form id="equipamentoForm">
-  <label for="nomeEquip">Nome do Equipamento:</label>
+  <label for="nomeEquip">PAINEL DE OPERAÇÃO:</label>
   <input type="text" id="nomeEquip" required />
   
   <label for="statusEquip">Status:</label>
@@ -29,15 +20,34 @@
     <option value="standby">Standby</option>
   </select>
   
+  <label for="causaParada">EQUIPAMENTO /CAUSA:</label>
+  <input type="text" id="causaParada" placeholder="Equipamento e a causa (se aplicável)" />
+  
+  <label for="horaInicio">Horário Início:</label>
+  <input type="time" id="horaInicio" />
+  
+  <label for="horaFim">Horário Fim:</label>
+  <input type="time" id="horaFim" />
+  
   <button type="submit">Cadastrar</button>
+  <button type="submit" id="limparBtn">Limpar</button>
+  
 </form>
+<div style="text-align-last: left; margin-bottom: 20px;">
+  <img src="Stratos.jpg" alt="Logomarca" style="max-width: 200px; height: auto;" />
+  </div>
+<h2>STATUS MINA</h2>
 
-<h2>Relatório de Equipamentos</h2>
 <table id="relatorioEquip">
   <thead>
     <tr>
       <th>Equipamento</th>
       <th>Status</th>
+      <th>Causa da Parada</th>
+      <th>Horário Início</th>
+      <th>Horário Fim</th>
+      <th>Data e Hora Cadastro</th>
+      <th>Ações</th>
     </tr>
   </thead>
   <tbody>
@@ -47,32 +57,124 @@
 
 <script>
   const form = document.getElementById('equipamentoForm');
+  const nomeInput = document.getElementById('nomeEquip');
+  const statusSelect = document.getElementById('statusEquip');
+  const causaInput = document.getElementById('causaParada');
+  const horaInicioInput = document.getElementById('horaInicio');
+  const horaFimInput = document.getElementById('horaFim');
   const tabelaCorpo = document.querySelector('#relatorioEquip tbody');
+  const limparBtn = document.getElementById('limparBtn');
+
+limparBtn.addEventListener('click', () => {
+  form.reset();
+  editandoIndex = null;
+  nomeInput.focus();
+});
+
+  let equipamentos = [];
+  let editandoIndex = null;
+
+  function formatDateTime(date) {
+    const options = { 
+      year: 'numeric', month: '2-digit', day: '2-digit', 
+      hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    };
+    return new Intl.DateTimeFormat('pt-BR', options).format(date);
+  }
+
+  function renderTabela() {
+    tabelaCorpo.innerHTML = '';
+    equipamentos.forEach((equip, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdNome = document.createElement('td');
+      tdNome.textContent = equip.nome;
+
+      const tdStatus = document.createElement('td');
+      tdStatus.textContent = equip.status.charAt(0).toUpperCase() + equip.status.slice(1);
+      tdStatus.className = `status-${equip.status}`;
+
+      const tdCausa = document.createElement('td');
+      tdCausa.textContent = equip.causa || '-';
+
+      const tdHoraInicio = document.createElement('td');
+      tdHoraInicio.textContent = equip.horaInicio || '-';
+
+      const tdHoraFim = document.createElement('td');
+      tdHoraFim.textContent = equip.horaFim || '-';
+
+      const tdDataHora = document.createElement('td');
+      tdDataHora.textContent = equip.dataHoraCadastro || '-';
+
+      const tdAcoes = document.createElement('td');
+      tdAcoes.innerHTML = `
+        <button class="btn editar" onclick="editarEquipamento(${idx})">Editar</button>
+        <button class="btn excluir" onclick="excluirEquipamento(${idx})">Excluir</button>
+      `;
+
+      tr.appendChild(tdNome);
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdCausa);
+      tr.appendChild(tdHoraInicio);
+      tr.appendChild(tdHoraFim);
+      tr.appendChild(tdDataHora);
+      tr.appendChild(tdAcoes);
+
+      tabelaCorpo.appendChild(tr);
+    });
+  }
 
   form.addEventListener('submit', function(event) {
     event.preventDefault();
-    const nome = document.getElementById('nomeEquip').value.trim();
-    const status = document.getElementById('statusEquip').value;
 
-    if (nome && status) {
-      const tr = document.createElement('tr');
-      const tdNome = document.createElement('td');
-      tdNome.textContent = nome;
-      const tdStatus = document.createElement('td');
-      
-      tdStatus.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-      tdStatus.className = `status-${status}`;
-      
-      tr.appendChild(tdNome);
-      tr.appendChild(tdStatus);
-      tabelaCorpo.appendChild(tr);
+    const nome = nomeInput.value.trim();
+    const status = statusSelect.value;
+    const causa = causaInput.value.trim();
+    const horaInicio = horaInicioInput.value;
+    const horaFim = horaFimInput.value;
 
-      form.reset();
+    if (!nome || !status) return;
+
+    const dataHoraCadastro = formatDateTime(new Date());
+
+    const equipamentoObj = {
+      nome,
+      status,
+      causa,
+      horaInicio,
+      horaFim,
+      dataHoraCadastro
+    };
+
+    if (editandoIndex !== null) {
+      equipamentos[editandoIndex] = equipamentoObj;
+      editandoIndex = null;
+    } else {
+      equipamentos.push(equipamentoObj);
     }
+
+    renderTabela();
+    form.reset();
   });
+
+  window.editarEquipamento = function(index) {
+    const equip = equipamentos[index];
+    nomeInput.value = equip.nome;
+    statusSelect.value = equip.status;
+    causaInput.value = equip.causa || '';
+    horaInicioInput.value = equip.horaInicio || '';
+    horaFimInput.value = equip.horaFim || '';
+    editandoIndex = index;
+    nomeInput.focus();
+  };
+
+  window.excluirEquipamento = function(index) {
+    equipamentos.splice(index, 1);
+    renderTabela();
+  };
+
+  renderTabela();
 </script>
 
 </body>
-
-
 </html>
